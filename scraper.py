@@ -3,6 +3,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 import time
+import random
 
 
 def scrape(maxPages=10, pageSize=25, sleepSeconds=1.2):
@@ -84,7 +85,8 @@ def scrape(maxPages=10, pageSize=25, sleepSeconds=1.2):
 
             print(f"Batch start={start}\n")
 
-            time.sleep(sleepSeconds)
+            time.sleep(random.uniform(sleepSeconds * 0.7, sleepSeconds * 1.3))
+
 
         print(f"\nTotal found {totalPrinted}")
 
