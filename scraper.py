@@ -6,17 +6,15 @@ import time
 import random
 
 
-def scrape(maxPages=10, pageSize=25, sleepSeconds=1.2):
+def scrape(maxPages=25, pageSize=10, sleepSeconds=1.2):
     url = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
     
     session = requests.Session()
 
     retry = Retry(
-        total=3,
+        total=5,
         backoff_factor=1.0,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET"],
-        respect_retry_after_header=True,
+        status_forcelist=[429, 500, 502, 503, 504]
     )
     
     adapter = HTTPAdapter(max_retries=retry)
@@ -27,12 +25,22 @@ def scrape(maxPages=10, pageSize=25, sleepSeconds=1.2):
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/119.0.0.0 Safari/537.36"
+            "Chrome/143.0.0.0 Safari/537.36"
         ),
         "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
     })
 
-    baseParams = {"keywords": "Yazılım", "location": "Turkey", "sortBy" : "DD"}
+    baseParams = {
+    "keywords": '"Yazılım" OR "Software" OR "Developer" OR "Geliştirici" OR '
+    '"Mühendisi" OR "Full Stack" OR "Backend" OR "Frontend"', 
+    "location": "Turkey"
+}
+
+    whitelist = [
+        "yazılım", "software", "developer", "geliştirici", "mühendis", 
+        "engineer", "full stack", "backend", "frontend", "staj", "intern",
+        "mobile", "ios", "android", "data", "analyst", "test", "qa"
+    ] 
 
     seen = set() 
     totalPrinted = 0
@@ -65,8 +73,12 @@ def scrape(maxPages=10, pageSize=25, sleepSeconds=1.2):
 
                 if not titleTag:
                     continue
-
+                
                 title = titleTag.get_text(strip=True)
+                title_lower = title.lower()
+                if not any(keyword in title_lower for keyword in whitelist):
+                    continue
+
                 company = companyTag.get_text(strip=True) if companyTag else "no company name"
                 date = dateTag.get("datetime") if dateTag else "date not specified"
                 link = linkTag.get("href") if linkTag else "link not found"
@@ -99,4 +111,4 @@ def scrape(maxPages=10, pageSize=25, sleepSeconds=1.2):
 
 
 if __name__ == "__main__":
-    scrape(maxPages=10, pageSize=25, sleepSeconds=1.2)
+    scrape()
